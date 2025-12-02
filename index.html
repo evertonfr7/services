@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Gerenciador de Serviços</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    font-family: Arial;
+    padding: 20px;
+    max-width: 520px;
+    margin: auto;
+    background: #f2f2f7;
+  }
+
+  h2 {
+    margin-top: 25px;
+    color: #333;
+  }
+
+  .card {
+    background: white;
+    padding: 18px;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+  }
+
+  input, button {
+    width: 100%;
+    padding: 14px;
+    margin: 6px 0;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    outline: none;
+    box-sizing: border-box;
+  }
+
+  button {
+    background: #007aff;
+    color: white;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  button:active {
+    opacity: 0.85;
+  }
+
+  .service-item {
+    background: white;
+    padding: 16px;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    margin-bottom: 12px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .service-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .service-name {
+    font-size: 17px;
+    font-weight: bold;
+    color: #222;
+  }
+
+  .service-meta {
+    font-size: 14px;
+    color: #777;
+  }
+
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .actions button {
+    width: 38px;
+    padding: 8px;
+    border-radius: 10px;
+    font-size: 14px;
+  }
+
+  .edit-btn { background: #ff9f0a; }
+  .del-btn { background: #ff3b30; }
+  .up-btn { background: #34c759; }
+  .down-btn { background: #5856d6; }
+</style>
+</head>
+<body>
+
+<h2>Adicionar Serviço</h2>
+
+<div class="card">
+  <input id="name" placeholder="Nome do serviço">
+  <input id="duration" placeholder="Duração (minutos)" type="number">
+  <input id="amount" placeholder="Preço" type="number">
+  <button onclick="addService()">Adicionar</button>
+</div>
+
+<button onclick="exportJSON()" style="margin-bottom: 10px;">Exportar JSON</button>
+
+<h2>Serviços</h2>
+<div id="list"></div>
+
+<script>
+let services = [];
+
+function render() {
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  services.forEach((s, index) => {
+    const div = document.createElement("div");
+    div.className = "service-item";
+
+    div.innerHTML = `
+      <div class="service-info">
+        <span class="service-name">${s.name}</span>
+        <span class="service-meta">R$${s.amount} — ${s.duration} min</span>
+      </div>
+
+      <div class="actions">
+        <button class="up-btn" onclick="moveUp(${index})">↑</button>
+        <button class="down-btn" onclick="moveDown(${index})">↓</button>
+        <button class="edit-btn" onclick="editService(${index})">✎</button>
+        <button class="del-btn" onclick="deleteService(${index})">✕</button>
+      </div>
+    `;
+
+    list.appendChild(div);
+  });
+}
+
+function moveUp(i) {
+  if (i === 0) return;
+  [services[i - 1], services[i]] = [services[i], services[i - 1]];
+  render();
+}
+
+function moveDown(i) {
+  if (i === services.length - 1) return;
+  [services[i + 1], services[i]] = [services[i], services[i + 1]];
+  render();
+}
+
+function addService() {
+  const name = document.getElementById("name").value;
+  const duration = Number(document.getElementById("duration").value);
+  const amount = Number(document.getElementById("amount").value);
+
+  if (!name || !duration || !amount) 
+    return alert("Preencha todos os campos!");
+
+  services.push({ name, duration, amount });
+
+  document.getElementById("name").value = "";
+  document.getElementById("duration").value = "";
+  document.getElementById("amount").value = "";
+
+  render();
+}
+
+function editService(index) {
+  const s = services[index];
+  const name = prompt("Nome:", s.name);
+  const duration = prompt("Duração (min):", s.duration);
+  const amount = prompt("Preço:", s.amount);
+
+  if (name && duration && amount) {
+    services[index] = {
+      name,
+      duration: Number(duration),
+      amount: Number(amount)
+    };
+  }
+
+  render();
+}
+
+function deleteService(index) {
+  services.splice(index, 1);
+  render();
+}
+
+function exportJSON() {
+  const jsonObj = { services: {} };
+
+  services.forEach((s, i) => {
+    const id = String(i + 1);
+    jsonObj.services[id] = {
+      name: s.name,
+      value: id,
+      amount: s.amount,
+      duration: s.duration
+    };
+  });
+
+  const blob = new Blob(
+    [JSON.stringify(jsonObj, null, 2)],
+    { type: "application/json" }
+  );
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "services.json";
+  a.click();
+}
+</script>
+
+</body>
+</html>
