@@ -116,6 +116,20 @@
 <script>
 let services = [];
 
+// 🔥 Carregar do localStorage ao iniciar
+window.onload = () => {
+  const saved = localStorage.getItem("services");
+  if (saved) {
+    services = JSON.parse(saved);
+  }
+  render();
+};
+
+// 🔥 Salvar automaticamente no localStorage
+function save() {
+  localStorage.setItem("services", JSON.stringify(services));
+}
+
 function render() {
   const list = document.getElementById("list");
   list.innerHTML = "";
@@ -140,6 +154,8 @@ function render() {
 
     list.appendChild(div);
   });
+
+  save();
 }
 
 function moveUp(i) {
